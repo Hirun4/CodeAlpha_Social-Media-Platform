@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Media Platform</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div id="app">
+        <!-- Navigation -->
+        <nav class="navbar" id="navbar" style="display: none;">
+            <div class="nav-container">
+                <div class="nav-brand">
+                    <h2>SocialNet</h2>
+                </div>
+                <div class="nav-search">
+                    <input type="text" id="searchInput" placeholder="Search users..." class="search-input">
+                    <div id="searchResults" class="search-results"></div>
+                </div>
+                <div class="nav-menu">
+                    <button class="nav-btn" onclick="showFeed()">
+                        <i class="fas fa-home"></i> Feed
+                    </button>
+                    <button class="nav-btn" onclick="showProfile()">
+                        <i class="fas fa-user"></i> Profile
+                    </button>
+                    <button class="nav-btn" onclick="window.location.href='pages/create-post.html'">
+                        <i class="fas fa-plus"></i> Create Post
+                    </button>
+                    <button class="nav-btn" onclick="logout()">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
+                    
+                </div>
+            </div>
+        </nav>
+
+        <!-- Login/Register Forms -->
+        <div id="authContainer" class="auth-container">
+            <div class="auth-card">
+                <h1>Welcome to SocialNet</h1>
+                
+                <!-- Login Form -->
+                <div id="loginForm" class="auth-form">
+                    <h2>Login</h2>
+                    <form onsubmit="login(event)">
+                        <div class="form-group">
+                            <input type="email" id="loginEmail" placeholder="Email" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="password" id="loginPassword" placeholder="Password" required>
+                        </div>
+                        <button type="submit" class="auth-btn">Login</button>
+                    </form>
+                    <p class="auth-switch">
+                        Don't have an account? 
+                        <a href="#" onclick="showRegister()">Sign up</a>
+                    </p>
+                </div>
+
+                <!-- Register Form -->
+                <div id="registerForm" class="auth-form" style="display: none;">
+                    <h2>Sign Up</h2>
+                    <form onsubmit="register(event)">
+                        <div class="form-group">
+                            <input type="text" id="regUsername" placeholder="Username" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="email" id="regEmail" placeholder="Email" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="text" id="regFullName" placeholder="Full Name" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="password" id="regPassword" placeholder="Password" required>
+                        </div>
+                        <button type="submit" class="auth-btn">Sign Up</button>
+                    </form>
+                    <p class="auth-switch">
+                        Already have an account? 
+                        <a href="#" onclick="showLogin()">Login</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <main id="mainContent" class="main-content" style="display: none;">
+            <!-- Feed Section -->
+            <section id="feedSection" class="content-section">
+                <div class="container">
+                    <!-- Posts Feed -->
+                    <div id="postsContainer" class="posts-container">
+                        <!-- Posts will be loaded here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Profile Section -->
+            <section id="profileSection" class="content-section" style="display: none;">
+                <div class="container">
+                    <div class="profile-header">
+                        <div class="profile-info">
+                            <div class="profile-avatar">
+                                <i class="fas fa-user-circle"></i>
+                            </div>
+                            <div class="profile-details">
+                                <h2 id="profileName"></h2>
+                                <p id="profileUsername"></p>
+                                <p id="profileBio"></p>
+                                <div class="profile-stats">
+                                    <span id="profilePosts">0 Posts</span>
+                                    <span id="profileFollowers">0 Followers</span>
+                                    <span id="profileFollowing">0 Following</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="profile-actions">
+                            <button onclick="editProfile()" class="edit-btn">Edit Profile</button>
+                        </div>
+                    </div>
+
+                    <!-- Edit Profile Modal -->
+                    <div id="editProfileModal" class="modal" style="display: none;">
+                        <div class="modal-content">
+                            <span class="close" onclick="closeEditProfile()">&times;</span>
+                            <h3>Edit Profile</h3>
+                            <form onsubmit="updateProfile(event)">
+                                <div class="form-group">
+                                    <label>Full Name</label>
+                                    <input type="text" id="editFullName" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Bio</label>
+                                    <textarea id="editBio" rows="3" placeholder="Tell us about yourself..."></textarea>
+                                </div>
+                                <div class="form-actions">
+                                    <button type="button" onclick="closeEditProfile()" class="cancel-btn">Cancel</button>
+                                    <button type="submit" class="save-btn">Save Changes</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- User Posts -->
+                    <div id="userPostsContainer" class="posts-container">
+                        <!-- User posts will be loaded here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- User Profile Section -->
+            <section id="userProfileSection" class="content-section" style="display: none;">
+                <div class="container">
+                    <div class="profile-header">
+                        <div class="profile-info">
+                            <div class="profile-avatar">
+                                <i class="fas fa-user-circle"></i>
+                            </div>
+                            <div class="profile-details">
+                                <h2 id="userProfileName"></h2>
+                                <p id="userProfileUsername"></p>
+                                <p id="userProfileBio"></p>
+                                <div class="profile-stats">
+                                    <span id="userProfilePosts">0 Posts</span>
+                                    <span id="userProfileFollowers">0 Followers</span>
+                                    <span id="userProfileFollowing">0 Following</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="profile-actions">
+                            <button id="followBtn" class="follow-btn">Follow</button>
+                        </div>
+                    </div>
+
+                    <!-- User Posts -->
+                    <div id="viewUserPostsContainer" class="posts-container">
+                        <!-- User posts will be loaded here -->
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Loading Spinner -->
+        <div id="loadingSpinner" class="loading-spinner" style="display: none;">
+            <div class="spinner"></div>
+        </div>
+
+        <!-- Toast Notifications -->
+        <div id="toastContainer" class="toast-container"></div>
+    </div>
+
+    <script type="module" src="js/app.js"></script>
+    <script type="module" src="js/auth.js"></script>
+</body>
+</html>
+
+
+
