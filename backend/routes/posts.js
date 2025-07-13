@@ -8,7 +8,8 @@ const {
   getPost,
   likePost,
   deletePost,
-  getAllPosts
+  getAllPosts,
+  editPost
 } = require('../controllers/postController');
 
 const router = express.Router();
@@ -35,6 +36,9 @@ router.post('/:id/like', auth, likePost);
 
 // Delete post
 router.delete('/:id', auth, deletePost);
+
+// Edit post (with optional image)
+router.put('/:id', auth, upload.single('image'), editPost);
 
 // Get all posts
 router.get('/all', getAllPosts);

@@ -35,8 +35,8 @@ export async function registerApi(username, email, password, fullName) {
 export async function getProfile() {
     return apiRequest('/users/profile');
 }
-export async function updateProfile(fullName, bio) {
-    return apiRequest('/users/profile', 'PUT', { fullName, bio });
+export async function updateProfile(fullName, bio, username) {
+    return apiRequest('/users/profile', 'PUT', { fullName, bio, username });
 }
 export async function searchUsers(query) {
     return apiRequest(`/users/search?query=${encodeURIComponent(query)}`);
@@ -80,6 +80,16 @@ export async function createPostWithImage(formData) {
     if (!res.ok) throw await res.json();
     return res.json();
 }
+export async function editPost(postId, formData) {
+    const token = getToken();
+    const res = await fetch(`${API_BASE}/posts/${postId}`, {
+        method: 'PUT',
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+        body: formData
+    });
+    if (!res.ok) throw await res.json();
+    return res.json();
+}
 
 // Comments
 export async function getComments(postId) {
@@ -93,4 +103,14 @@ export async function likeComment(id) {
 }
 export async function deleteComment(id) {
     return apiRequest(`/comments/${id}`, 'DELETE');
+}
+export async function uploadAvatar(formData) {
+    const token = getToken();
+    const res = await fetch(`${API_BASE}/users/avatar`, {
+        method: 'POST',
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+        body: formData
+    });
+    if (!res.ok) throw await res.json();
+    return res.json();
 }

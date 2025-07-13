@@ -142,11 +142,36 @@ const getAllPosts = async (req, res) => {
   }
 };
 
+const editPost = async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id);
+    if (!post) return res.status(404).json({ message: 'Post not found' });
+    if (!post.author.equals(req.user.id)) {
+      return res.status(403).json({ message: 'Not authorized to edit this post' });
+    }
+
+    const { content } = req.body;
+    if (content) post.content = content;
+
+    // Handle image update if provided
+    if (req.file) {
+      post.image = '/uploads/' + req.file.filename;
+    }
+
+    await post.save();
+    await post.populate('author', 'username fullName avatar');
+    res.json(post);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
 module.exports = {
   createPost,
   getFeedPosts,
   getPost,
   likePost,
   deletePost,
-  getAllPosts
+  getAllPosts,
+  editPost
 };

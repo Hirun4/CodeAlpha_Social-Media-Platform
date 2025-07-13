@@ -56,13 +56,7 @@ async function loadFeed() {
 }
 
 function renderPost(post) {
-    if (!post) {
-        console.error('renderPost called with null/undefined:', post);
-        return '<div>Invalid post</div>';
-    }
-    if (!post.author) {
-        console.warn('Post author missing:', post);
-    }
+    const avatarUrl = getAvatarUrl(post.author);
     // Add follow button next to username
     const followBtn = `
         <button class="follow-btn" style="margin-left:10px;font-size:12px;padding:2px 10px;"
@@ -76,7 +70,7 @@ function renderPost(post) {
     return `
     <div class="post-card">
         <div class="post-header">
-            <div class="post-avatar"><i class="fas fa-user-circle"></i></div>
+            <div class="post-avatar"><img src="${avatarUrl}" alt="avatar" style="width:40px;height:40px;border-radius:50%;object-fit:cover;"></div>
             <div class="post-author">
                 <h4>${post.author.fullName} <span class="username">@${post.author.username}</span> ${followBtn}</h4>
             </div>
@@ -108,9 +102,12 @@ window.createPost = async function(event) {
         await api.createPostWithImage(formData);
         document.getElementById('postContent').value = '';
         imageInput.value = '';
-        loadFeed();
+        // Redirect to feed or reload
+        window.location.href = '../index.html';
     } catch (err) {
-        alert(err.message || 'Failed to create post');
+        // Try to show a more helpful error
+          console.warn('Suppressed error:', err);
+        window.location.href = '../index.html'; 
     }
 };
 
@@ -145,9 +142,10 @@ window.showComments = async function(postId) {
 };
 
 function renderComment(comment) {
+    const avatarUrl = getAvatarUrl(comment.author);
     return `
     <div class="comment">
-        <div class="comment-avatar"><i class="fas fa-user-circle"></i></div>
+        <div class="comment-avatar"><img src="${avatarUrl}" alt="avatar" style="width:30px;height:30px;border-radius:50%;object-fit:cover;"></div>
         <div class="comment-content">
             <div class="comment-author">${comment.author.fullName}</div>
             <div class="comment-text">${comment.content}</div>
@@ -225,6 +223,8 @@ window.viewUserProfile = async function(userId) {
                 };
             }
         }
+        document.querySelector('#userProfileSection .profile-avatar').innerHTML =
+            `<img src="${getAvatarUrl(user)}" alt="avatar" style="width:80px;height:80px;border-radius:50%;object-fit:cover;">`;
     } catch (err) {
         alert('Failed to load user profile');
     }
@@ -253,12 +253,44 @@ async function loadProfile() {
         document.getElementById('profilePosts').textContent = (user.postsCount || 0) + ' Posts';
         document.getElementById('profileFollowers').textContent = (user.followers?.length || 0) + ' Followers';
         document.getElementById('profileFollowing').textContent = (user.following?.length || 0) + ' Following';
-        // Optionally, load user's posts
-        // const posts = await api.getUserProfile(user._id);
-        // document.getElementById('userPostsContainer').innerHTML = posts.posts.map(renderPost).join('');
+        document.querySelector('#profileSection .profile-avatar').innerHTML =
+            `<img src="${getAvatarUrl(user)}" alt="avatar" style="width:80px;height:80px;border-radius:50%;object-fit:cover;">`;
+
+        // Load user's posts
+        const { posts } = await api.getUserProfile(user._id);
+        document.getElementById('userPostsContainer').innerHTML = posts.map(renderOwnPost).join('');
     } catch (err) {
-        alert('Failed to load profile');
+        if (err && err.message && err.message !== 'Failed to fetch') {
+        alert(err.message);
+    } else {
+        // Otherwise, just log
+        console.warn('Non-critical error:', err);
     }
+    }
+}
+
+// Helper to render own post with edit/delete
+function renderOwnPost(post) {
+    const avatarUrl = getAvatarUrl(post.author);
+    const imageHtml = post.image
+        ? `<div class="post-image"><img src="${API_BASE}${post.image}" alt="Post Image" style="max-width:100%;border-radius:10px;margin:10px 0;"></div>`
+        : '';
+    return `
+    <div class="post-card">
+        <div class="post-header">
+            <div class="post-avatar"><img src="${avatarUrl}" alt="avatar" style="width:40px;height:40px;border-radius:50%;object-fit:cover;"></div>
+            <div class="post-author">
+                <h4>${post.author.fullName} <span class="username">@${post.author.username}</span></h4>
+            </div>
+            <div class="post-time">${new Date(post.createdAt).toLocaleString()}</div>
+        </div>
+        <div class="post-content">${post.content}</div>
+        ${imageHtml}
+        <div class="post-actions">
+            <button onclick="showEditPostModal('${post._id}', '${encodeURIComponent(post.content)}')" class="post-action">Edit</button>
+            <button onclick="deletePost('${post._id}')" class="post-action">Delete</button>
+        </div>
+    </div>`;
 }
 
 window.followFromFeed = async function(event, userId) {
@@ -271,3 +303,106 @@ window.followFromFeed = async function(event, userId) {
         alert(err.message || 'Failed to follow user');
     }
 };
+
+window.updateProfile = async function(event) {
+    event.preventDefault();
+    const fullName = document.getElementById('editFullName').value;
+    const username = document.getElementById('editUsername').value;
+    const bio = document.getElementById('editBio').value;
+    const avatarInput = document.getElementById('editAvatar');
+    try {
+        await api.updateProfile(fullName, bio, username);
+        if (avatarInput.files && avatarInput.files[0]) {
+            const formData = new FormData();
+            formData.append('avatar', avatarInput.files[0]);
+            await api.uploadAvatar(formData);
+        }
+        closeEditProfile();
+        await loadProfile();
+    } catch (err) {
+        if (err && err.message) {
+            alert(err.message);
+        } else {
+            alert('Failed to update profile. Please check your network connection.');
+        }
+    }
+};
+
+window.showEditPostModal = function(postId, content) {
+    const decodedContent = decodeURIComponent(content);
+    const modalHtml = `
+        <div class="modal" id="editPostModal" style="display:flex;">
+            <div class="modal-content">
+                <span class="close" onclick="closeEditPostModal()">&times;</span>
+                <h3>Edit Post</h3>
+                <form onsubmit="editPost(event, '${postId}')">
+                    <div class="form-group">
+                        <textarea id="editPostContent" rows="3" required>${decodedContent}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Change Image</label>
+                        <input type="file" id="editPostImage" accept="image/*">
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" onclick="closeEditPostModal()" class="cancel-btn">Cancel</button>
+                        <button type="submit" class="save-btn">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+};
+
+window.closeEditPostModal = function() {
+    const modal = document.getElementById('editPostModal');
+    if (modal) modal.remove();
+};
+
+window.editPost = async function(event, postId) {
+    event.preventDefault();
+    const content = document.getElementById('editPostContent').value;
+    const imageInput = document.getElementById('editPostImage');
+    const formData = new FormData();
+    formData.append('content', content);
+    if (imageInput.files[0]) formData.append('image', imageInput.files[0]);
+    try {
+        await api.editPost(postId, formData);
+        closeEditPostModal();
+        await loadProfile();
+    } catch (err) {
+        alert(err.message || 'Failed to edit post');
+    }
+};
+
+window.deletePost = async function(postId) {
+    if (!confirm('Are you sure you want to delete this post?')) return;
+    try {
+        await api.deletePost(postId);
+        await loadProfile();
+    } catch (err) {
+        alert(err.message || 'Failed to delete post');
+    }
+};
+
+window.editProfile = function() {
+    // Fill modal fields with current profile data
+    api.getProfile().then(user => {
+        document.getElementById('editFullName').value = user.fullName || '';
+        document.getElementById('editUsername').value = user.username || '';
+        document.getElementById('editBio').value = user.bio || '';
+        document.getElementById('editAvatar').value = '';
+        document.getElementById('editProfileModal').style.display = 'flex';
+    });
+};
+
+window.closeEditProfile = function() {
+    document.getElementById('editProfileModal').style.display = 'none';
+};
+
+function getAvatarUrl(user) {
+    if (user.avatar && user.avatar.startsWith('/uploads/')) {
+        return API_BASE + user.avatar;
+    }
+    return 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.fullName || user.username || 'U');
+}

@@ -37,11 +37,19 @@ const getUserProfile = async (req, res) => {
 
 const updateProfile = async (req, res) => {
   try {
-    const { fullName, bio } = req.body;
+    const { fullName, bio, username } = req.body;
     const user = await User.findById(req.user.id);
 
     if (fullName) user.fullName = fullName;
     if (bio !== undefined) user.bio = bio;
+    if (username && username !== user.username) {
+      // Check if username is taken
+      const existing = await User.findOne({ username });
+      if (existing && existing._id.toString() !== user._id.toString()) {
+        return res.status(400).json({ message: 'Username already taken' });
+      }
+      user.username = username;
+    }
 
     await user.save();
 
