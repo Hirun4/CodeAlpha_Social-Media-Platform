@@ -12,7 +12,7 @@
         <!-- Navigation -->
         <nav class="navbar" id="navbar" style="display: none;">
             <div class="nav-container">
-                <div class="nav-brand">
+                <div class="nav-brand" style="cursor:pointer;" onclick="showFeed()">
                     <h2>SocialNet</h2>
                 </div>
                 <div class="nav-search">
@@ -202,6 +202,14 @@
 
     <script type="module" src="js/app.js"></script>
     <script type="module" src="js/auth.js"></script>
+    <script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Show navbar if user is logged in
+    if (localStorage.getItem('token')) {
+        document.getElementById('navbar').style.display = '';
+    }
+});
+</script>
 </body>
 </html>
 

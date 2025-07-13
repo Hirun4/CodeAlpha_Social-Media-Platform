@@ -4,22 +4,27 @@
     <meta charset="UTF-8">
     <title>Create Post</title>
     <link rel="stylesheet" href="../css/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-    <nav class="navbar">
+    <nav class="navbar" id="navbar" style="display: none;">
         <div class="nav-container">
-            <div class="nav-brand">
+            <div class="nav-brand" style="cursor:pointer;" onclick="window.location.href='../index.html'">
                 <h2>SocialNet</h2>
+            </div>
+            <div class="nav-search">
+                <input type="text" id="searchInput" placeholder="Search users..." class="search-input">
+                <div id="searchResults" class="search-results"></div>
             </div>
             <div class="nav-menu">
                 <button class="nav-btn" onclick="window.location.href='../index.html'">
                     <i class="fas fa-home"></i> Feed
                 </button>
-                <button class="nav-btn" onclick="window.location.href='../pages/create-post.html'">
-                    <i class="fas fa-plus"></i> Create Post
-                </button>
                 <button class="nav-btn" onclick="window.location.href='../index.html'">
                     <i class="fas fa-user"></i> Profile
+                </button>
+                <button class="nav-btn" onclick="window.location.href='create-post.html'">
+                    <i class="fas fa-plus"></i> Create Post
                 </button>
                 <button class="nav-btn" onclick="logout()">
                     <i class="fas fa-sign-out-alt"></i> Logout
@@ -43,5 +48,12 @@
     </main>
     <script type="module" src="../js/app.js"></script>
     <script type="module" src="../js/auth.js"></script>
+    <script>
+document.addEventListener('DOMContentLoaded', function() {
+    if (localStorage.getItem('token')) {
+        document.getElementById('navbar').style.display = '';
+    }
+});
+</script>
 </body>
 </html>
