@@ -29,7 +29,7 @@ const upload = multer({ storage });
 router.post('/', auth, upload.single('image'), createPost);
 
 // Get feed posts
-router.get('/feed',  getFeedPosts);
+router.get('/feed', auth, getFeedPosts);
 
 // Like/unlike post
 router.post('/:id/like', auth, likePost);

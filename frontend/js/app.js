@@ -8,6 +8,7 @@ window.register = register;
 window.logout = logout;
 
 const API_BASE = 'http://localhost:5002';
+let myFollowingIds = [];
 
 document.addEventListener('DOMContentLoaded', async () => {
     if (!localStorage.getItem('token')) {
@@ -29,8 +30,12 @@ async function loadFeed() {
     const postsContainer = document.getElementById('postsContainer');
     postsContainer.innerHTML = 'Loading...';
     try {
-        const posts = await api.getAllPosts();
-        console.log('Fetched posts:', posts); // <-- Debug log
+        // Fetch current user profile to get following list
+        const myProfile = await api.getProfile();
+        myFollowingIds = (myProfile.following || []).map(u => u._id);
+
+        const posts = await api.getFeedPosts();
+        console.log('Fetched posts:', posts);
         if (!Array.isArray(posts)) {
             console.error('Posts is not an array:', posts);
             postsContainer.innerHTML = 'Error: Posts data is invalid.';
@@ -43,7 +48,7 @@ async function loadFeed() {
         }
         postsContainer.innerHTML = posts.map(post => {
             try {
-                return renderPost(post);
+                return renderPost(post, myProfile._id);
             } catch (err) {
                 console.error('Error rendering post:', post, err);
                 return '<div>Error rendering post</div>';
@@ -55,15 +60,28 @@ async function loadFeed() {
     }
 }
 
-function renderPost(post) {
+function renderPost(post, myUserId) {
     const avatarUrl = getAvatarUrl(post.author);
-    // Add follow button next to username
-    const followBtn = `
-        <button class="follow-btn" style="margin-left:10px;font-size:12px;padding:2px 10px;"
-            onclick="followFromFeed(event, '${post.author._id}')">
-            Follow
-        </button>
-    `;
+
+    // Don't show follow button for own posts
+    let followBtn = '';
+    if (post.author._id !== myUserId) {
+        if (myFollowingIds.includes(post.author._id)) {
+            followBtn = `
+                <button class="follow-btn" style="margin-left:10px;font-size:12px;padding:2px 10px; background:#28a745; color:white; cursor:default;" disabled>
+                    Followed
+                </button>
+            `;
+        } else {
+            followBtn = `
+                <button class="follow-btn" style="margin-left:10px;font-size:12px;padding:2px 10px;"
+                    onclick="followFromFeed(event, '${post.author._id}')">
+                    Follow
+                </button>
+            `;
+        }
+    }
+
     const imageHtml = post.image
         ? `<div class="post-image"><img src="${API_BASE}${post.image}" alt="Post Image" style="max-width:100%;border-radius:10px;margin:10px 0;"></div>`
         : '';

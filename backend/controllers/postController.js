@@ -40,9 +40,9 @@ const getFeedPosts = async (req, res) => {
     const skip = (page - 1) * limit;
 
     const currentUser = await User.findById(req.user.id);
-    const followingIds = [...currentUser.following, req.user.id];
+    const followingIds = currentUser.following; // Only users you follow, not yourself
 
-    const posts = await Post.find({ author: { $in: followingIds } })
+    const posts = await Post.find({ author: { $ne: req.user.id } })
       .populate('author', 'username fullName avatar')
       .sort({ createdAt: -1 })
       .skip(skip)
