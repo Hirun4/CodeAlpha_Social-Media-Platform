@@ -18,7 +18,7 @@ const register = async (req, res) => {
 
     const { username, email, password, fullName } = req.body;
 
-    // Check if user exists
+    
     const existingUser = await User.findOne({
       $or: [{ email }, { username }]
     });
@@ -27,7 +27,7 @@ const register = async (req, res) => {
       return res.status(400).json({ message: 'User already exists' });
     }
 
-    // Create user
+    
     const user = new User({
       username,
       email,
@@ -64,13 +64,13 @@ const login = async (req, res) => {
 
     const { email, password } = req.body;
 
-    // Find user
+    
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
-    // Check password
+   
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
       return res.status(400).json({ message: 'Invalid credentials' });

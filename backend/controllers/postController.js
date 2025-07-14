@@ -14,7 +14,7 @@ const createPost = async (req, res) => {
       return res.status(400).json({ message: 'Post content is required' });
     }
 
-    // tags is expected as an array of tag IDs
+   
     const post = new Post({
       content: content.trim(),
       author: req.user.id,
@@ -25,7 +25,7 @@ const createPost = async (req, res) => {
     await post.save();
     await User.findByIdAndUpdate(req.user.id, { $inc: { postsCount: 1 } });
     await post.populate('author', 'username fullName avatar');
-    await post.populate('tags', 'name'); // Populate tags
+    await post.populate('tags', 'name'); 
 
     res.status(201).json(post);
   } catch (error) {
@@ -40,7 +40,7 @@ const getFeedPosts = async (req, res) => {
     const skip = (page - 1) * limit;
 
     const currentUser = await User.findById(req.user.id);
-    const followingIds = currentUser.following; // Only users you follow, not yourself
+    const followingIds = currentUser.following; 
 
     const posts = await Post.find({ author: { $ne: req.user.id } })
       .populate('author', 'username fullName avatar')
@@ -88,11 +88,11 @@ const likePost = async (req, res) => {
     const hasLiked = post.likes.includes(req.user.id);
 
     if (hasLiked) {
-      // Unlike
+     
       post.likes = post.likes.filter(id => !id.equals(req.user.id));
       post.likesCount = Math.max(0, post.likesCount - 1);
     } else {
-      // Like
+      
       post.likes.push(req.user.id);
       post.likesCount += 1;
     }
@@ -122,7 +122,7 @@ const deletePost = async (req, res) => {
 
     await Post.findByIdAndDelete(req.params.id);
 
-    // Update user's post count
+   
     await User.findByIdAndUpdate(req.user.id, { $inc: { postsCount: -1 } });
 
     res.json({ message: 'Post deleted successfully' });
@@ -154,7 +154,7 @@ const editPost = async (req, res) => {
     const { content } = req.body;
     if (content) post.content = content;
 
-    // Handle image update if provided
+   
     if (req.file) {
       post.image = '/uploads/' + req.file.filename;
     }

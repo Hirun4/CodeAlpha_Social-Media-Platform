@@ -13,7 +13,7 @@ const {
 
 const router = express.Router();
 
-// Multer setup for avatar
+
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, path.join(__dirname, '../uploads'));
@@ -24,7 +24,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// Avatar upload endpoint
+
 router.post('/avatar', auth, upload.single('avatar'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
@@ -37,22 +37,22 @@ router.post('/avatar', auth, upload.single('avatar'), async (req, res) => {
   }
 });
 
-// Get current user profile
+
 router.get('/profile', auth, getProfile);
 
-// Get user profile by ID
+
 router.get('/profile/:id', auth, getUserProfile);
 
-// Update profile
+
 router.put('/profile', auth, updateProfile);
 
-// Follow user
+
 router.post('/follow/:id', auth, followUser);
 
-// Unfollow user
+
 router.post('/unfollow/:id', auth, unfollowUser);
 
-// Search users
+
 router.get('/search', auth, searchUsers);
 
 module.exports = router;

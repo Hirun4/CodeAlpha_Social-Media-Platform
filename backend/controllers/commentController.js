@@ -23,12 +23,12 @@ const createComment = async (req, res) => {
 
     await comment.save();
 
-    // Add comment to post and update count
+    
     post.comments.push(comment._id);
     post.commentsCount += 1;
     await post.save();
 
-    // Populate author details
+    
     await comment.populate('author', 'username fullName avatar');
 
     res.status(201).json(comment);
@@ -60,11 +60,11 @@ const likeComment = async (req, res) => {
     const hasLiked = comment.likes.includes(req.user.id);
 
     if (hasLiked) {
-      // Unlike
+      
       comment.likes = comment.likes.filter(id => !id.equals(req.user.id));
       comment.likesCount = Math.max(0, comment.likesCount - 1);
     } else {
-      // Like
+      
       comment.likes.push(req.user.id);
       comment.likesCount += 1;
     }

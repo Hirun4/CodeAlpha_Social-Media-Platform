@@ -43,7 +43,7 @@ const updateProfile = async (req, res) => {
     if (fullName) user.fullName = fullName;
     if (bio !== undefined) user.bio = bio;
     if (username && username !== user.username) {
-      // Check if username is taken
+     
       const existing = await User.findOne({ username });
       if (existing && existing._id.toString() !== user._id.toString()) {
         return res.status(400).json({ message: 'Username already taken' });
@@ -79,12 +79,12 @@ const followUser = async (req, res) => {
       return res.status(400).json({ message: 'Cannot follow yourself' });
     }
 
-    // Check if already following
+    
     if (currentUser.following.includes(userToFollow._id)) {
       return res.status(400).json({ message: 'Already following this user' });
     }
 
-    // Add to following/followers
+    
     currentUser.following.push(userToFollow._id);
     userToFollow.followers.push(currentUser._id);
 
@@ -106,7 +106,7 @@ const unfollowUser = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Remove from following/followers
+  
     currentUser.following = currentUser.following.filter(
       id => !id.equals(userToUnfollow._id)
     );
