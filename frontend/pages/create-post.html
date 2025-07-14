@@ -39,6 +39,12 @@
                 <form onsubmit="createPost(event)" class="create-post-form" enctype="multipart/form-data">
                     <textarea id="postContent" placeholder="Share your thoughts..." rows="3" required></textarea>
                     <input type="file" id="postImage" accept="image/*" style="margin:10px 0;">
+                    <div class="form-group">
+                        <label for="postTags">Tags</label>
+                        <input type="text" id="tagSearch" placeholder="Search tags..." autocomplete="off">
+                        <div id="tagSuggestions" class="search-results"></div>
+                        <div id="selectedTags"></div>
+                    </div>
                     <div class="post-actions">
                         <button type="submit" class="post-btn">Post</button>
                     </div>

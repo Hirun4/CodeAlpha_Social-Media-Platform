@@ -9,6 +9,8 @@ window.logout = logout;
 
 const API_BASE = 'http://localhost:5002';
 let myFollowingIds = [];
+let allTags = [];
+let selectedTagIds = [];
 
 document.addEventListener('DOMContentLoaded', async () => {
     if (!localStorage.getItem('token')) {
@@ -24,6 +26,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     loadFeed();
     setupSearch();
+    
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Always run on create post page, regardless of folder
+    if (window.location.pathname.endsWith('create-post.html') || window.location.pathname.endsWith('/create-post.html')) {
+        selectedTagIds = []; // Reset on page load
+        setupTagSelector();
+    }
 });
 
 async function loadFeed() {
@@ -112,20 +123,28 @@ window.createPost = async function(event) {
 
     if (!content.trim()) return;
 
+    if (selectedTagIds.length < 3) {
+        alert('Please select at least 3 tags for your post.');
+        return;
+    }
+    if (selectedTagIds.length > 7) {
+        alert('You can select up to 7 tags only.');
+        return;
+    }
+
     const formData = new FormData();
     formData.append('content', content);
     if (imageFile) formData.append('image', imageFile);
+    selectedTagIds.forEach(tagId => formData.append('tags[]', tagId));
 
     try {
         await api.createPostWithImage(formData);
         document.getElementById('postContent').value = '';
         imageInput.value = '';
-        // Redirect to feed or reload
         window.location.href = '../index.html';
     } catch (err) {
-        // Try to show a more helpful error
-          console.warn('Suppressed error:', err);
-        window.location.href = '../index.html'; 
+        console.warn('Suppressed error:', err);
+        window.location.href = '../index.html';
     }
 };
 
@@ -423,4 +442,85 @@ function getAvatarUrl(user) {
         return API_BASE + user.avatar;
     }
     return 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.fullName || user.username || 'U');
+}
+
+async function setupTagSelector() {
+    try {
+        allTags = await api.getAllTags();
+        console.log('Fetched tags:', allTags);
+    } catch (err) {
+        allTags = [];
+        console.error('Failed to fetch tags:', err);
+    }
+    const tagSearch = document.getElementById('tagSearch');
+    const tagSuggestions = document.getElementById('tagSuggestions');
+    const selectedTagsDiv = document.getElementById('selectedTags');
+
+    function renderSelectedTags() {
+        selectedTagsDiv.innerHTML = selectedTagIds.map(id => {
+            const tag = allTags.find(t => t._id === id);
+            return `<span class="tag-chip">${tag.name} <span class="remove-tag" data-id="${id}">&times;</span></span>`;
+        }).join(' ');
+    }
+
+    function updateSuggestions(query = '') {
+        let filtered;
+        if (!query) {
+            filtered = allTags.filter(tag => !selectedTagIds.includes(tag._id));
+        } else {
+            filtered = allTags.filter(tag =>
+                tag.name.toLowerCase().includes(query) && !selectedTagIds.includes(tag._id)
+            );
+        }
+        tagSuggestions.innerHTML = filtered.map(tag =>
+            `<div class="search-result-item" data-id="${tag._id}">${tag.name}</div>`
+        ).join('');
+        tagSuggestions.style.display = filtered.length ? '' : 'none';
+    }
+
+    // Show all tags on focus if less than 7 selected
+    tagSearch.addEventListener('focus', () => {
+        if (selectedTagIds.length < 7) {
+            updateSuggestions('');
+        }
+    });
+
+    // Filter tags as user types
+    tagSearch.addEventListener('input', () => {
+        if (selectedTagIds.length >= 7) {
+            tagSearch.value = '';
+            tagSuggestions.style.display = 'none';
+            return;
+        }
+        updateSuggestions(tagSearch.value.trim().toLowerCase());
+    });
+
+    // Hide dropdown on blur (with delay for click)
+    tagSearch.addEventListener('blur', () => {
+        setTimeout(() => { tagSuggestions.style.display = 'none'; }, 200);
+    });
+
+    // Add tag on click
+    tagSuggestions.addEventListener('click', (e) => {
+        if (e.target.classList.contains('search-result-item')) {
+            const tagId = e.target.getAttribute('data-id');
+            if (selectedTagIds.length < 7 && !selectedTagIds.includes(tagId)) {
+                selectedTagIds.push(tagId);
+                renderSelectedTags();
+            }
+            tagSearch.value = '';
+            tagSuggestions.style.display = 'none';
+        }
+    });
+
+    // Remove tag on click
+    selectedTagsDiv.addEventListener('click', (e) => {
+        if (e.target.classList.contains('remove-tag')) {
+            const tagId = e.target.getAttribute('data-id');
+            selectedTagIds = selectedTagIds.filter(id => id !== tagId);
+            renderSelectedTags();
+        }
+    });
+
+    renderSelectedTags();
 }

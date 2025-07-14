@@ -114,3 +114,8 @@ export async function uploadAvatar(formData) {
     if (!res.ok) throw await res.json();
     return res.json();
 }
+export async function getAllTags() {
+    const res = await fetch(`${API_BASE}/tags`);
+    if (!res.ok) throw await res.json();
+    return res.json();
+}

@@ -63,27 +63,21 @@ body {
 
 .search-results {
     position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-    max-height: 300px;
+    background: #fff;
+    border: 1px solid #ccc;
+    z-index: 10;
+    max-height: 200px;
     overflow-y: auto;
-    z-index: 1001;
-    display: none;
+    width: 100%;
 }
 
 .search-result-item {
-    padding: 12px 15px;
+    padding: 8px 12px;
     cursor: pointer;
-    border-bottom: 1px solid #f0f0f0;
-    transition: background-color 0.2s ease;
 }
 
 .search-result-item:hover {
-    background-color: #f8f9fa;
+    background: #f0f0f0;
 }
 
 .search-result-item:last-child {
@@ -151,6 +145,7 @@ body {
 
 .form-group {
     margin-bottom: 20px;
+    position: relative;
 }
 
 .form-group input,

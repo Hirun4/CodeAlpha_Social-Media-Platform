@@ -30,7 +30,11 @@ const postSchema = new mongoose.Schema({
   commentsCount: {
     type: Number,
     default: 0
-  }
+  },
+  tags: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Tag'
+  }]
 }, {
   timestamps: true
 });

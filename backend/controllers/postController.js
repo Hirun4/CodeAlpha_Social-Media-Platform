@@ -1,9 +1,10 @@
 const Post = require('../models/Post');
 const User = require('../models/User');
+const Tag = require('../models/Tag'); // Add this at the top
 
 const createPost = async (req, res) => {
   try {
-    const { content } = req.body;
+    const { content, tags } = req.body;
     let image = '';
     if (req.file) {
       image = '/uploads/' + req.file.filename;
@@ -13,19 +14,18 @@ const createPost = async (req, res) => {
       return res.status(400).json({ message: 'Post content is required' });
     }
 
+    // tags is expected as an array of tag IDs
     const post = new Post({
       content: content.trim(),
       author: req.user.id,
-      image
+      image,
+      tags: Array.isArray(tags) ? tags : []
     });
 
     await post.save();
-
-    // Update user's post count
     await User.findByIdAndUpdate(req.user.id, { $inc: { postsCount: 1 } });
-
-    // Populate author details
     await post.populate('author', 'username fullName avatar');
+    await post.populate('tags', 'name'); // Populate tags
 
     res.status(201).json(post);
   } catch (error) {
@@ -44,6 +44,7 @@ const getFeedPosts = async (req, res) => {
 
     const posts = await Post.find({ author: { $ne: req.user.id } })
       .populate('author', 'username fullName avatar')
+      .populate('tags', 'name')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
