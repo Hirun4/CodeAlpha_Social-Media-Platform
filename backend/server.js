@@ -12,7 +12,7 @@ const tagRoutes = require('./routes/tags');
 
 const app = express();
 
-// Middleware
+
 app.use(cors({
   origin: ['http://localhost:5501', 'http://127.0.0.1:5501'],
   credentials: true
@@ -20,11 +20,11 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve static files
+
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(express.static(path.join(__dirname, '../frontend')));
 
-// Connect to MongoDB
+
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/socialmedia', {
   useNewUrlParser: true,
   useUnifiedTopology: true,
@@ -32,19 +32,19 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/socialmed
 .then(() => console.log('MongoDB connected'))
 .catch(err => console.log('MongoDB connection error:', err));
 
-// Routes
+
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/comments', commentRoutes);
 app.use('/api/tags', tagRoutes);
 
-// Serve frontend
+
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../frontend/index.html'));
 });
 
-const PORT = process.env.PORT || 5002; // Change from 6000 to 5000
+const PORT = process.env.PORT || 5002; 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
